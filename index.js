@@ -202,14 +202,18 @@ async function main() {
         console.log('argumentsArr-----', argumentsArr);
         if(!argumentsArr.length) {
             await projectGenerator();
-        }else if(argumentsArr.length === 3 && argumentsArr[ 0 ] === 'generate' && argumentsArr[ 1 ] === 'module') {
+        }else if(argumentsArr.length === 3 && (argumentsArr[ 0 ] === 'generate' || argumentsArr[ 0 ] === 'g') && (argumentsArr[ 1 ] === 'component' || argumentsArr[ 1 ] === 'c')) {
             const isRootFile = fs.readdirSync(CURR_DIR).find(file => file === 'calmapi.json');
-            if(!isRootFile) {
-                throw new Error('Please Run inside a calmapi Project.');
-            }else {
-                await moduleGenerator(argumentsArr[ 2 ]);
-            }
-        }else if(argumentsArr.length === 4 && argumentsArr[ 0 ] === 'generate' && argumentsArr[ 1 ] === 'module' && argumentsArr[ 3 ] === '--force') {
+            // if(!isRootFile) {
+            //     throw new Error('Please Run inside a calmapi Project.');
+            // }else {
+            //     await moduleGenerator(argumentsArr[ 2 ]);
+            // }
+
+            await moduleGenerator(argumentsArr[ 2 ]);
+
+
+        }else if(argumentsArr.length === 4 && (argumentsArr[ 0 ] === 'generate' || argumentsArr[ 0 ] === 'g') && (argumentsArr[ 1 ] === 'component' || argumentsArr[ 1 ] === 'c') && argumentsArr[ 3 ] === '--force') {
             const isRootFile = fs.readdirSync(CURR_DIR).find(file => file === 'calmapi.json');
             if(!isRootFile) {
                 throw new Error('Please Run inside a calmapi Project.');

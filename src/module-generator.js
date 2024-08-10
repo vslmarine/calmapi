@@ -8,7 +8,7 @@ const caseChanger = require('case');
 module.exports = async function(modulePath, isForce = false) {
     try {
         const modulePathArr = modulePath.split('/');
-        const finalModulePath = `${CURR_DIR}/src/modules`;
+        const finalModulePath = `${CURR_DIR}/src/app/main`;
         let finalModuleName = modulePathArr;
         if(!isForce) {
             finalModuleName = pluralize.singular(modulePathArr.pop());
@@ -19,7 +19,12 @@ module.exports = async function(modulePath, isForce = false) {
 
         console.log(chalk.blueBright(`Creating Module: ${finalModuleName}`));
         console.log(chalk.blueBright(`Creating Directory: ${kebabCase}`));
-        fs.mkdirSync(`${moduleDirPath}`);
+        try {
+            
+            fs.mkdirSync(`${moduleDirPath}`);
+        } catch (error) {
+            
+        }
         console.log(chalk.blueBright('Generating Files'));
         // eslint-disable-next-line no-use-before-define
         await createDirectoryContents(templatePath, finalModuleName, moduleDirPath);
@@ -45,45 +50,32 @@ async function createDirectoryContents(templatePath, moduleName, moduleWritePath
 
             if (stats.isFile()) {
                 let contents = fs.readFileSync(origFilePath, 'utf8');
-                const PascalCase = caseChanger.pascal(moduleName);
-                const camelCase = caseChanger.camel(moduleName);
+                const PascalCase = `${caseChanger.pascal(moduleName)}Component`;
+                // const camelCase = caseChanger.camel(moduleName);
                 const kebabCase = caseChanger.kebab(moduleName);
                 switch (file) {
-                    case 'sample.controller.js':
+                    case 'sample.component.html':
                         // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.controller.js`;
-                        contents = contents.replace(/MODULE_SINGULAR_PASCAL/g, PascalCase);
-                        contents = contents.replace(/MODULE_SINGULAR_CAMEL/g, camelCase);
-                        contents = contents.replace(/MODULE_SINGULAR_KEBAB/g, kebabCase);
+                        file = `${kebabCase}.component.html`;
+                        contents = contents.replace(/MODULE_NAME/g, `${moduleName} works!`);
                         break;
-                    case 'sample.dto.js':
+                    case 'sample.component.scss':
                         // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.dto.js`;
+                        file = `${kebabCase}.component.scss`;
                         break;
-                    case 'sample.model.js':
-                        contents = contents.replace(/MODULE_SINGULAR_PASCAL/g, PascalCase);
-                        contents = contents.replace(/MODULE_SINGULAR_CAMEL/g, camelCase);
-                        contents = contents.replace(/MODULE_SINGULAR_KEBAB/g, kebabCase);
+                    case 'sample.component.spec.ts':
                         // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.model.js`;
+                        file = `${kebabCase}.component.spec.ts`;
+                        contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
+                        contents = contents.replace(/MODULE_NAME/g, `'./${moduleName}.component'`);
                         break;
-                    case 'sample.route.js':
-                        contents = contents.replace(/MODULE_SINGULAR_PASCAL/g, PascalCase);
-                        contents = contents.replace(/MODULE_SINGULAR_CAMEL/g, camelCase);
-                        contents = contents.replace(/MODULE_SINGULAR_KEBAB/g, kebabCase);
+                    case 'sample.component.ts':
                         // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.route.js`;
-                        break;
-                    case 'sample.service.js':
-                        contents = contents.replace(/MODULE_SINGULAR_PASCAL/g, PascalCase);
-                        contents = contents.replace(/MODULE_SINGULAR_CAMEL/g, camelCase);
-                        contents = contents.replace(/MODULE_SINGULAR_KEBAB/g, kebabCase);
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.service.js`;
-                        break;
-                    case 'sample.settings.js':
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.settings.js`;
+                        file = `${kebabCase}.component.ts`;
+                        contents = contents.replace(/APP_MODULE/g, `'app-${moduleName}'`);
+                        contents = contents.replace(/MODULE_HTML_COMPONENT/g, `'./${moduleName}.component.html'`);
+                        contents = contents.replace(/MODULE_SCSS/g, `['./${moduleName}.component.scss']`);
+                        contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
                         break;
                     default:
                         break;
