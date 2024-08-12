@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+/* eslint-disable func-style */
+/* eslint-disable no-irregular-whitespace */
 'use strict';
 const inquirer = require('inquirer');
 const CURR_DIR = process.cwd();
@@ -9,6 +11,7 @@ const packageInfo = require('./package.json');
 const axios = require('axios');
 const ora = require('ora');
 const chalk = require('chalk');
+const ExcelJs = require('exceljs');
 const moduleGenerator = require('./src/module-generator');
 const text = `
 ░█████╗░░█████╗░██╗░░░░░███╗░░░███╗  ░█████╗░██████╗░██╗
@@ -195,6 +198,30 @@ function getCalmApiJson() {
     };
 }
 
+async function generateModel(file) {
+    try {
+        const wb = new ExcelJs.Workbook();
+        await wb.xlsx.readFile(file);
+
+        const sheet = wb.worksheets[ 0 ];
+        const result = {};
+
+        sheet.eachRow((row, rowNumber) => {
+            if(rowNumber !== 1) {
+                const cellValue = row.getCell(2).value;
+            
+                if (cellValue) {
+                    result[ cellValue ] = [ null ];
+                }
+            }
+        });
+        
+        return result;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
 // eslint-disable-next-line func-style
 async function main() {
     try {
@@ -202,17 +229,25 @@ async function main() {
         console.log('argumentsArr-----', argumentsArr);
         if(!argumentsArr.length) {
             await projectGenerator();
-        }else if(argumentsArr.length === 3 && (argumentsArr[ 0 ] === 'generate' || argumentsArr[ 0 ] === 'g') && (argumentsArr[ 1 ] === 'component' || argumentsArr[ 1 ] === 'c')) {
-            const isRootFile = fs.readdirSync(CURR_DIR).find(file => file === 'calmapi.json');
+        }else if(argumentsArr.length >= 3 && (argumentsArr[ 0 ] === 'generate' || argumentsArr[ 0 ] === 'g') && (argumentsArr[ 1 ] === 'component' || argumentsArr[ 1 ] === 'c')) {
+            // const isRootFile = fs.readdirSync(CURR_DIR).find(file => file === 'calmapi.json');
             // if(!isRootFile) {
             //     throw new Error('Please Run inside a calmapi Project.');
             // }else {
             //     await moduleGenerator(argumentsArr[ 2 ]);
             // }
 
-            await moduleGenerator(argumentsArr[ 2 ]);
+            const args = (argumentsArr[ 2 ]).split('/');
+            const arg2 = args.pop();
+            const path = args.join('/');
 
-
+            if(argumentsArr[ 3 ] && argumentsArr[ 3 ].includes('.xlsx')) {
+                const schema = await generateModel(argumentsArr[ 3 ]);
+                await moduleGenerator(arg2, false, path, schema);
+            } else {
+                await moduleGenerator(arg2, false, path);
+            }
+            
         }else if(argumentsArr.length === 4 && (argumentsArr[ 0 ] === 'generate' || argumentsArr[ 0 ] === 'g') && (argumentsArr[ 1 ] === 'component' || argumentsArr[ 1 ] === 'c') && argumentsArr[ 3 ] === '--force') {
             const isRootFile = fs.readdirSync(CURR_DIR).find(file => file === 'calmapi.json');
             if(!isRootFile) {
