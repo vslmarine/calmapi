@@ -7,7 +7,7 @@ const pluralize = require('pluralize');
 const chalk = require('chalk');
 const caseChanger = require('case');
 
-module.exports = async function(modulePath, isForce = false, path = null, result = null) {
+module.exports = async function(modulePath, isForce = false, path = null, result = null, htmlContent = null) {
     try {
         const modulePathArr = modulePath.split('/');
         let finalModulePath;
@@ -33,7 +33,7 @@ module.exports = async function(modulePath, isForce = false, path = null, result
         }
         console.log(chalk.blueBright('Generating Files'));
         // eslint-disable-next-line no-use-before-define
-        await createDirectoryContents(templatePath, finalModuleName, moduleDirPath, result);
+        await createDirectoryContents(templatePath, finalModuleName, moduleDirPath, result, htmlContent);
         console.log(chalk.blueBright('Module Generation Complete'));
     } catch (error) {
         if(error.code === 'EEXIST') {
@@ -65,7 +65,7 @@ const modelSchema = function(schema) {
 };
 
 // eslint-disable-next-line func-style
-async function createDirectoryContents(templatePath, moduleName, moduleWritePath, schema) {
+async function createDirectoryContents(templatePath, moduleName, moduleWritePath, schema, htmlContent) {
     try {
         const filesToCreate = fs.readdirSync(templatePath);
         filesToCreate.forEach((file) => {
@@ -84,8 +84,11 @@ async function createDirectoryContents(templatePath, moduleName, moduleWritePath
                     case 'sample.component.html':
                         // eslint-disable-next-line no-param-reassign
                         file = `${kebabCase}.component.html`;
+                        if(htmlContent && htmlContent.length > 0) {
+                            contents = contents.replace(/HTML_MODULE/g, htmlContent);
+                            contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
+                        }
                         contents = contents.replace(/MODULE_NAME/g, `${moduleName} works!`);
-                        contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
                         break;
                     case 'sample.component.scss':
                         // eslint-disable-next-line no-param-reassign
@@ -121,5 +124,7 @@ async function createDirectoryContents(templatePath, moduleName, moduleWritePath
             }
 
         });
-    } catch (error) {}
+    } catch (error) {
+        console.log('error = ', error);
+    }
 }
