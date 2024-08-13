@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable quotes */
 /* eslint-disable func-style */
 /* eslint-disable no-irregular-whitespace */
 'use strict';
@@ -222,6 +223,167 @@ async function generateModel(file) {
     }
 }
 
+async function createHTML(result) {
+    try {
+        let htmlContent = `
+                <form class="noonForm" nz-form [formGroup]="MODULE_COMPONENT_FORM">
+                    <div nz-row [nzGutter]="16">
+                `;
+
+        for(const eachTable in result) {
+            htmlContent += `
+                <div nz-col class="gutter-row" [nzLg]="24" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                    <nz-card nzTitle="${result[ eachTable ]?.[ 0 ]?.tableName}">
+                        <div nz-row [nzGutter]="16">
+                `;
+            for(const item of result[ eachTable ]) {
+                const labelName = item.labelName;
+
+                if (item.formKey.length === 1) {
+                    const formControlName = item.formKey[ 0 ];
+                    const tagName = item.tagName[ 0 ] || 'input';
+                    const tagEnding = tagName === 'input' ? ` />` : `></${tagName}>`;
+                    const attributes = item.attributes[ 0 ].flat().join(' ');
+
+                    htmlContent += `
+            <div nz-col class="gutter-row noPadding" [nzLg]="12" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                <nz-form-item>
+                    <nz-form-label [nzLg]="8" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                        ${labelName}
+                    </nz-form-label>
+                    <nz-form-control class="halfFormOneIp" [nzLg]="14" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                        <${tagName} formControlName="${formControlName}" ${attributes}${tagEnding}
+                    </nz-form-control>
+                </nz-form-item>
+            </div>
+        `;
+                } else {
+                    const formControlName1 = item.formKey[ 0 ];
+                    const formControlName2 = item.formKey[ 1 ];
+                    const tagName1 = item.tagName[ 0 ] || 'input';
+                    const tagName2 = item.tagName[ 1 ] || 'input';
+                    const tagEnding1 = tagName1 === 'input' ? ` />` : `></${tagName1}>`;
+                    const tagEnding2 = tagName2 === 'input' ? ` />` : `></${tagName2}>`;
+                    const attributes1 = item.attributes[ 0 ].flat().join(' ');
+                    const attributes2 = item.attributes[ 1 ].flat().join(' ');
+
+                    htmlContent += `
+                    <div nz-col class="gutter-row noPadding" [nzLg]="12" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                        <div nz-col [nzLg]="24" class="halfRow">
+                            <div nz-col class="gutter-row noPadding" [nzLg]="14" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                                <nz-form-item>
+                                    <nz-form-label [nzLg]="14" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                                        ${labelName}
+                                    </nz-form-label>
+                                    <nz-form-control [nzLg]="10" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                                        <${tagName1} class="halfRowFirstIp" formControlName="${formControlName1}"
+                                            style="width: 100%" ${attributes1}${tagEnding1}
+                                    </nz-form-control>
+                                </nz-form-item>
+                            </div>
+                            <div nz-col class="gutter-row onlyLeftPaddingAdj" [nzLg]="10" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                                <nz-form-item>
+                                    <nz-form-control [nzLg]="20" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                                        <${tagName2} formControlName="${formControlName2}" style="width: 100%" ${attributes2}${tagEnding2}
+
+                                    </nz-form-control>
+                                </nz-form-item>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+
+            };
+            htmlContent += `
+                    </div>
+                </nz-card>
+            </div>
+
+            <nz-divider></nz-divider> `;
+        }
+
+        htmlContent += `
+                    </div>
+                </form>`;
+
+        return htmlContent;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+async function generatejson(file) {
+    try {
+        const wb = new ExcelJs.Workbook();
+        await wb.xlsx.readFile(file);
+
+        const sheet = wb.worksheets[ 0 ];
+        const result = {};
+
+        sheet.eachRow((row, rowNumber) => {
+            if (rowNumber !== 1) {
+
+                const col1Value = row.getCell(1).value;
+                const col2Value = row.getCell(2).value;
+                const col3Value = row.getCell(3).value;
+                const col4Value = row.getCell(4).value;
+                const col5Value = row.getCell(5).value;
+                const col6Value = row.getCell(6).value;
+
+                if (typeof col6Value == 'number' && col6Value > 0) {
+
+                    const tableKey = `table${col6Value}`;
+                    if (!result[ tableKey ]) {
+                        result[ tableKey ] = [];
+                    }
+
+                    const existingEntry = result[ tableKey ].find(entry => entry.labelName === col1Value);
+
+                    const determineAttributes = (tagNames, labelName) => {
+                        return tagNames.map(tag => {
+                            switch (tag) {
+                                case 'input':
+                                    return [ 'nz-input', 'type="text"', `placeholder="${labelName}"` ];
+                                case 'nz-date-picker':
+                                    return [ 'nzFormat="dd/MM/yyyy"' ];
+                                case 'nz-time-picker':
+                                    return [ '[nzUse12Hours]="false"', 'nzFormat="HH:mm"' ];
+                                default:
+                                    return [];
+                            }
+                        });
+                    };
+
+                    if (existingEntry) {
+                        existingEntry.formKey.push(col2Value);
+                        existingEntry.tagName.push(col3Value);
+                        existingEntry.attributes.push(determineAttributes([ col3Value ], col1Value));
+                    } else {
+                        const entry = {
+                            labelName: col1Value,
+                            formKey: [ col2Value ],
+                            tagName: [ col3Value ],
+                            attributes: determineAttributes([ col3Value ], col1Value),
+                            validation: col4Value,
+                            tableName: col5Value,
+                            tableNum: col6Value,
+                        };
+                        entry[ tableKey ] = [];
+                        result[ tableKey ].push(entry);
+                    }
+                }
+            }
+        });
+
+        const html = createHTML(result);
+
+        return html;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
 // eslint-disable-next-line func-style
 async function main() {
     try {
@@ -243,7 +405,8 @@ async function main() {
 
             if(argumentsArr[ 3 ] && argumentsArr[ 3 ].includes('.xlsx')) {
                 const schema = await generateModel(argumentsArr[ 3 ]);
-                await moduleGenerator(arg2, false, path, schema);
+                const htmlContent = await generatejson(argumentsArr[ 3 ]);
+                await moduleGenerator(arg2, false, path, schema, htmlContent);
             } else {
                 await moduleGenerator(arg2, false, path);
             }
