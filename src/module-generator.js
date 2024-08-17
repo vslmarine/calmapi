@@ -86,10 +86,18 @@ async function createOptionsObj(jsonData, file) {
 
 const softMandatory = function(schema) {
     const softMandatoryArray = [];
+
     if(schema) {
         for(const eachKey in schema) {
-            if(schema[ eachKey ][ 0 ] == null && !(eachKey.toLocaleLowerCase().includes('comment')) ) {
+            if(schema[ eachKey ][ 0 ] == null && schema[ eachKey ][ 1 ]?.[ 0 ] != 'Validators.required' && !(eachKey.toLocaleLowerCase().includes('comment')) ) {
                 softMandatoryArray.push(eachKey);
+            } else if(eachKey == 'InspectionData') {
+                const obj = schema[ eachKey ][ 0 ];
+                for(const subKey in obj) {
+                    if(obj[ subKey ][ 0 ] == null && obj[ subKey ][ 1 ]?.[ 0 ] != 'Validators.required' && !(subKey.toLocaleLowerCase().includes('comment')) ) {
+                        softMandatoryArray.push(subKey);
+                    }
+                }
             }
         }
     }

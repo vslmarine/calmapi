@@ -65,6 +65,8 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
     this.mediaPreviewUrl = this.configurationService.mediaBaseUrl;
     this.MODULE_COMPONENT_FORM = this.fb.group({
       IMO_No: [ this.localUser?.IMO_No ],
+      offlineReportUniqueID: [null],
+      DateTimeToBeFormatted: [null],
       MODULE_SCHEMA,
       {{#if data.InspectionData }}
       InspectionData: this.fb.array([]),
@@ -256,6 +258,7 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
     );
     let hasSameDateTimeArray: any[] = [];
     allReports.forEach((res: any) => {
+      // add date instead of ROB_Report_Date
       if (dateTime == res?.ROB_Report_Date) {
         hasSameDateTimeArray.push(res);
       }
@@ -318,7 +321,7 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   }
 
   draft() {
-    let mandatoryControlnames: string[] = ['ROB_Report_Date'];
+    let mandatoryControlnames: string[] = [''];
     mandatoryControlnames.forEach((control: string) => {
       this.MODULE_COMPONENT_FORM.get(control)?.markAsDirty();
       this.MODULE_COMPONENT_FORM.get(control)?.updateValueAndValidity();

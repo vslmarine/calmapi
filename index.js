@@ -238,7 +238,21 @@ async function generateModel(file) {
                     }
                 } else if( unit ) {
                     if (cellValue) {
-                        inspectionData[ cellValue ] = [ null ];
+                        if(cell8Value == 'hard') {
+                            if(cell9Value) {
+                                inspectionData[ cellValue ] = [ null, [ 'Validators.required', `this.rangeValidationService.rangeValidator(${cell9Value})` ] ];
+                            } else {
+                                inspectionData[ cellValue ] = [ null, [ 'Validators.required' ] ];
+                            }
+                        } else if(cell8Value == 'soft') {
+                            if(cell9Value) {
+                                inspectionData[ cellValue ] = [ null, [ `this.rangeValidationService.rangeValidator(${cell9Value})` ] ];
+                            } else {
+                                inspectionData[ cellValue ] = [ null ];
+                            }
+                        } else {
+                            inspectionData[ cellValue ] = [ null ];
+                        }
                     }
                 }
             }
