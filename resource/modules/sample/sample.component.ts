@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormArray, AbstractControl, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { HttpRequestService, LocalStorageService, ConfigurationService } from 'src/app/core/services';
@@ -41,6 +41,7 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   setTimeOutIDs: any[] = [];
   draftShouldSaveOffline: boolean = true;
   reportAlreadyAvailable: boolean = false;
+  optionsObj: any = {};
 
   constructor(
     private fb: FormBuilder,
@@ -64,8 +65,16 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
     this.mediaPreviewUrl = this.configurationService.mediaBaseUrl;
     this.MODULE_COMPONENT_FORM = this.fb.group({
       IMO_No: [ this.localUser?.IMO_No ],
-      MODULE_SCHEMA
+      MODULE_SCHEMA,
+      {{#if data.InspectionData }}
+      InspectionData: this.fb.array([]),
+      {{/if}}
     })
+
+    this.optionsObj = MODULE_OPTIONS_OBJ
+
+    this.softMandatoryArray = MODULE_SOFT_MANDATORY
+
     this.updateOnlineStatus();
   }
 
@@ -74,7 +83,37 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+
+    {{#if data.InspectionData }}
+    this.addUnit(5)
+    {{/if}}
+
+    Object.keys(this.MODULE_COMPONENT_FORM.controls).forEach((controlName) => {
+      const control = this.MODULE_COMPONENT_FORM.get(controlName);
+      control?.valueChanges.subscribe(() => {
+        if (!control.pristine) {
+          this.highlightInvalidFields(controlName);
+        }
+      });
+    });
   }
+
+  {{#if data.InspectionData }}
+  addUnit(unitNum: number) {
+
+    for (let i = 0; i < unitNum ; i++) {
+      this.InspectionDataArray.push(
+        this.fb.group( SUB_MODULE_SCHEMA )
+      );
+    }
+  }
+  {{/if}}
+
+  {{#if data.InspectionData }}
+  get InspectionDataArray() {
+    return this.MODULE_COMPONENT_FORM.get('InspectionData') as FormArray;
+  }
+  {{/if}}
 
   getReportById(): void {
     this.setTimeOutIDs.push(
@@ -557,11 +596,8 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
     }
   }
 
-  returnRangeTooltipTitle(controlName: string): string {
-    const control = this.rangeValidationService.getFormControlWithRange.filter((res: any) => {
-      return res?.controlName == controlName;
-    });
-    return `Value should be between ${control[0]?.min}  to ${control[0]?.max}`;
+  returnRangeTooltipTitle(min: string | number, max: string | number): string {
+    return `Value should be between ${min}  to ${max}`;
   }
 
   tooltipText(controlName: string): any {

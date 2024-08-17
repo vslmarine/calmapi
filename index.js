@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-unused-vars */
 /* eslint-disable quotes */
 /* eslint-disable func-style */
 /* eslint-disable no-irregular-whitespace */
@@ -206,16 +207,47 @@ async function generateModel(file) {
 
         const sheet = wb.worksheets[ 0 ];
         const result = {};
+        const inspectionData = {};
 
         sheet.eachRow((row, rowNumber) => {
             if(rowNumber !== 1) {
                 const cellValue = row.getCell(2).value;
-            
-                if (cellValue) {
-                    result[ cellValue ] = [ null ];
+                const cell8Value = row.getCell(8).value;
+                const cell9Value = row.getCell(9).value;
+                const unit = row.getCell(7)?.value;
+
+                if( !unit ) {
+                    if (cellValue) {
+                        if (cellValue) {
+                            if(cell8Value == 'hard') {
+                                if(cell9Value) {
+                                    result[ cellValue ] = [ null, [ 'Validators.required', `this.rangeValidationService.rangeValidator(${cell9Value})` ] ];
+                                } else {
+                                    result[ cellValue ] = [ null, [ 'Validators.required' ] ];
+                                }
+                            } else if(cell8Value == 'soft') {
+                                if(cell9Value) {
+                                    result[ cellValue ] = [ null, [ `this.rangeValidationService.rangeValidator(${cell9Value})` ] ];
+                                } else {
+                                    result[ cellValue ] = [ null ];
+                                }
+                            } else {
+                                result[ cellValue ] = [ null ];
+                            }
+                        }
+                    }
+                } else if( unit ) {
+                    if (cellValue) {
+                        inspectionData[ cellValue ] = [ null ];
+                    }
                 }
             }
         });
+
+        if (Object.keys(inspectionData).length > 0) {
+            inspectionData[ "Unit" ] = [ null ];
+            result[ 'InspectionData' ] = [ inspectionData ];
+        }
         
         return result;
     } catch (e) {
@@ -329,25 +361,33 @@ async function generatejson(file) {
                 const col4Value = row.getCell(4).value;
                 const col5Value = row.getCell(5).value;
                 const col6Value = row.getCell(6).value;
+                const col7Value = row.getCell(7).value;
+                const col8Value = row.getCell(8).value;
+                const col9Value = row.getCell(9).value;
 
                 if (typeof col6Value == 'number' && col6Value > 0) {
 
-                    const tableKey = `table${col6Value}`;
+                    const tableKey = col5Value;
                     if (!result[ tableKey ]) {
                         result[ tableKey ] = [];
                     }
 
                     const existingEntry = result[ tableKey ].find(entry => entry.labelName === col1Value);
 
-                    const determineAttributes = (tagNames, labelName) => {
+                    const determineAttributes = (tagNames, labelName, formKey, range) => {
                         return tagNames.map(tag => {
                             switch (tag) {
                                 case 'input':
-                                    return [ 'nz-input', 'type="text"', `placeholder="${labelName}"` ];
+                                    if( !range ) {
+                                        return [ 'nz-input', 'type="text"', `placeholder="${labelName}"` ];
+                                    }
+                                    return [ 'nz-input', 'type="text"', `placeholder="${labelName}"`, 'nz-tooltip', 'nzTooltipPlacement="bottom"', 'nzTooltipColor="#ff4d4f"', `[nzTooltipTrigger]="tooltipText('${formKey}')"`, `[nzTooltipVisible]="tooltipText('${formKey}')"`, `[nzTooltipTitle]="returnRangeTooltipTitle(${range})"` ];
                                 case 'nz-date-picker':
                                     return [ 'nzFormat="dd/MM/yyyy"' ];
                                 case 'nz-time-picker':
                                     return [ '[nzUse12Hours]="false"', 'nzFormat="HH:mm"' ];
+                                case 'nz-select':
+                                    return [ 'nzAllowClear', 'nzShowSearch', `nzPlaceHolder="${labelName}"`, 'style="width: 100%"' ];
                                 default:
                                     return [];
                             }
@@ -357,16 +397,19 @@ async function generatejson(file) {
                     if (existingEntry) {
                         existingEntry.formKey.push(col2Value);
                         existingEntry.tagName.push(col3Value);
-                        existingEntry.attributes.push(determineAttributes([ col3Value ], col1Value));
+                        existingEntry.attributes.push(...determineAttributes([ col3Value ], col1Value, col2Value, col9Value));
+                        existingEntry.mandatory.push(col8Value);
                     } else {
                         const entry = {
                             labelName: col1Value,
                             formKey: [ col2Value ],
                             tagName: [ col3Value ],
-                            attributes: determineAttributes([ col3Value ], col1Value),
+                            attributes: determineAttributes([ col3Value ], col1Value, col2Value, col9Value),
                             validation: col4Value,
                             tableName: col5Value,
                             tableNum: col6Value,
+                            unit: col7Value,
+                            mandatory: [ col8Value ]
                         };
                         entry[ tableKey ] = [];
                         result[ tableKey ].push(entry);
@@ -375,9 +418,9 @@ async function generatejson(file) {
             }
         });
 
-        const html = createHTML(result);
+        // const html = createHTML(result);
 
-        return html;
+        return result;
     } catch (error) {
         console.log(error);
     }
@@ -406,7 +449,7 @@ async function main() {
             if(argumentsArr[ 3 ] && argumentsArr[ 3 ].includes('.xlsx')) {
                 const schema = await generateModel(argumentsArr[ 3 ]);
                 const htmlContent = await generatejson(argumentsArr[ 3 ]);
-                await moduleGenerator(arg2, false, path, schema, htmlContent);
+                await moduleGenerator(arg2, false, path, schema, htmlContent, argumentsArr[ 3 ]);
             } else {
                 await moduleGenerator(arg2, false, path);
             }
