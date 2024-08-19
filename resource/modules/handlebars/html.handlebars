@@ -27,9 +27,11 @@
         <div nz-col class="gutter-row" [nzLg]="24" [nzMd]="24" [nzSm]="24" [nzXs]="24">
             {{#with (lookup this '0') as |firstItem|}}
             {{#if (eq unit 1)}}
-            <div nz-row [nzGutter]="16">
+            <div nz-row class="gutter-row" [nzGutter]="16">
             <div nz-col formArrayName="InspectionData" [nzLg]="24" [nzMd]="24" [nzSm]="24" [nzXs]="24">
+                <nz-tabset  [nzTabBarStyle]="customCompInfoTabsPlacement" [(nzSelectedIndex)]="tabUnit" (nzSelectChange)="tabChange($event)" nzType="card">
                 <div nz-col *ngFor="let eachData of this.InspectionDataArray.controls; let i=index" [formGroupName]="i" [nzLg]="24" [nzMd]="24" [nzSm]="24" [nzXs]="24" class="halfRow">
+                    <nz-tab nzTitle="Unit \{{i + 1}}">
             {{/if}}
             {{/with}}
             <nz-card nzTitle="{{@key}}">
@@ -122,7 +124,9 @@
             {{#if (eq unit 1)}}
                 <nz-divider></nz-divider>
 
+                </nz-tab>
                 </div>
+                </nz-tabset>
             </div>
             </div>
             {{/if}}

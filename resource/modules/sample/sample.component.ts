@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, AbstractControl, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
@@ -39,9 +39,19 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   apiSubscriptionArray: Subscription[] = [];
   collectedDataFromApi: boolean = false;
   setTimeOutIDs: any[] = [];
+  allMEUnits: any[] = [];
   draftShouldSaveOffline: boolean = true;
   reportAlreadyAvailable: boolean = false;
   optionsObj: any = {};
+  tabUnit: number | string = 0;
+
+  customCompInfoTabsPlacement: any = {
+    ['position']: 'absolute',
+    ['right']: '35px',
+    ['top']: '14px',
+    ['z-index']: '10',
+    ['height']: '30px',
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -73,6 +83,26 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
       {{/if}}
     })
 
+    {{#if data.InspectionData }}
+    if (window.innerWidth > 850) {
+      this.customCompInfoTabsPlacement = {
+        ['position']: 'absolute',
+        ['right']: '35px',
+        ['top']: '14px',
+        ['z-index']: '10',
+        ['height']: '30px',
+      };
+    } else {
+      this.customCompInfoTabsPlacement = {
+        ['position']: 'relative',
+        ['right']: '0',
+        ['margin-top']: '9px',
+        ['z-index']: '10',
+        ['height']: '30px',
+      };
+    }
+    {{/if}}
+
     this.optionsObj = MODULE_OPTIONS_OBJ
 
     this.softMandatoryArray = MODULE_SOFT_MANDATORY
@@ -80,15 +110,49 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
     this.updateOnlineStatus();
   }
 
+  {{#if data.InspectionData }}
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    if (event.target.innerWidth > 850) {
+      this.customCompInfoTabsPlacement = {
+        ['position']: 'absolute',
+        ['right']: '35px',
+        ['top']: '14px',
+        ['z-index']: '10',
+        ['height']: '30px',
+      };
+    } else {
+      this.customCompInfoTabsPlacement = {
+        ['position']: 'relative',
+        ['right']: '0',
+        ['margin-top']: '9px',
+        ['z-index']: '10',
+        ['height']: '30px',
+      };
+    }
+  }
+  {{/if}}
+
   private updateOnlineStatus(): void {
     this.isOnline = window.navigator.onLine;
   }
 
   ngOnInit(): void {
 
-    {{#if data.InspectionData }}
-    this.addUnit(5)
-    {{/if}}
+
+    this.getOfflineConfigReport();
+
+    if (this.idForUpdate) {
+      if (this.isOnline) {
+        this.getReportById();
+      } else {
+        this.getOfflineReportById();
+      }
+    } else {
+      this.MODULE_COMPONENT_FORM.patchValue({
+        DateTimeToBeFormatted: true,
+      });
+    }    
 
     Object.keys(this.MODULE_COMPONENT_FORM.controls).forEach((controlName) => {
       const control = this.MODULE_COMPONENT_FORM.get(controlName);
@@ -99,6 +163,23 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
       });
     });
   }
+
+  {{#if data.InspectionData }}
+  async getOfflineConfigReport() {
+    let config = await this.indexedDbService.getAllConfigData();
+
+    Object.entries(config[0].mainEngineConfig).forEach(
+      (data: any, i: number) => {
+        if (data[0].includes('unit') && data[1]) {
+          // to get the number of units and store them in an array (allMEUnits)
+          this.allMEUnits.push(`UNIT ${i + 1}`);
+        }
+      }
+    );
+
+    await this.addUnit(this.allMEUnits.length)
+  }
+  {{/if}}
 
   {{#if data.InspectionData }}
   addUnit(unitNum: number) {
@@ -115,6 +196,10 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   get InspectionDataArray() {
     return this.MODULE_COMPONENT_FORM.get('InspectionData') as FormArray;
   }
+
+  tabChange(unit: any) {
+    this.tabUnit = unit?.index;
+  }
   {{/if}}
 
   getReportById(): void {
@@ -126,6 +211,8 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
         }
       }, 10000)
     );
+
+    // add backend url
     let updateUrl: string = this.editForm ? '' : 'drafts';
     this.apiSubscriptionArray.push(
       this.httpRequestService.request('get', `${updateUrl}/${this.idForUpdate}`).subscribe((res: any) => {
@@ -221,6 +308,8 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
               }
             }, 10000)
           );
+
+          // add backend url
           this.addOrUpdateReport(
             sendFormObj,
             this.idForUpdate ? 'put' : 'post',
@@ -321,6 +410,8 @@ export class MODULE_COMPONENT implements OnInit, OnDestroy {
   }
 
   draft() {
+
+    // add hard mandatory fields
     let mandatoryControlnames: string[] = [''];
     mandatoryControlnames.forEach((control: string) => {
       this.MODULE_COMPONENT_FORM.get(control)?.markAsDirty();

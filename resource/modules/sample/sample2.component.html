@@ -1,0 +1,76 @@
+<div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false">
+        <nz-page-header-title>MODULE_NAME</nz-page-header-title>
+        <nz-page-header-extra>
+            <button nz-button [routerLink]="['add']" routerLinkActive="router-link-active" class="btncls">
+                Add new report
+            </button>
+            <a routerLink="/main/cylinder-condition/dashboard"><button nz-button class="btncls">Back</button></a>
+        </nz-page-header-extra>
+    </nz-page-header>
+</div>
+
+<div nz-row nzJustify="end"></div>
+
+<nz-card>
+    <nz-table #reportTbl [nzData]="allReportsData?.allReports" [nzLoading]="loading"
+        [nzTotal]="allReportsData?.totalDataCount" [(nzPageSize)]="pageSize" [nzPageIndex]="pageIndex"
+        [nzFrontPagination]="false" (nzQueryParams)="onQueryParamsChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)" nzShowSizeChanger>
+        <thead>
+            <tr>
+                <th class="dateWidth">DATE</th>
+                <th style="text-align: center" nzWidth="9%">Action</th>
+                <th class="xsNoDisplay tableStatusColumn" style="text-align: center">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let data of reportTbl.data; index as i"
+                [ngClass]="allReportsData?.isDraftArray[i].isDraft ? 'trDraft' : ''">
+                <td>{{data.LinerInspec_Date | date : "dd-MMM-yy" : 'UTC'}}</td>
+                <td class="action-buttons" style="display: flex; justify-content: center">
+                    <ng-container *ngIf="noInternetConnection && isOffline === 'true'; else onlineDelBlock">
+                        <a style="margin-right: 12px" *ngIf="localUser?.Role == 'admin'" nzTooltipTitle="Delete"
+                            [nzOkText]="'Delete'" nz-popconfirm nzPopconfirmTitle="Are you sure to delete this?"
+                            nzTooltipPlacement="topCenter" nz-tooltip routerLinkActive="router-link-active"
+                            (nzOnConfirm)="offlineDelete(data.id, allReportsData?.isDraftArray[i].isDraft)"><img
+                                style="height: 20px" src="assets/images/delete.png" /></a>
+                    </ng-container>
+                    <ng-template #onlineDelBlock>
+                        <ng-container>
+                            <a *ngIf="localUser?.Role == 'admin'" style="margin-right: 12px" nzTooltipTitle="Delete"
+                                [nzOkText]="'Delete'" nz-popconfirm nzPopconfirmTitle="Are you sure to delete this?"
+                                nzTooltipPlacement="topCenter" nz-tooltip
+                                (nzOnConfirm)="delete(allReportsData?.apiUrlArray[i],data._id)"
+                                routerLinkActive="router-link-active"><img style="height: 20px"
+                                    src="assets/images/delete.png" /></a>
+                        </ng-container>
+                    </ng-template>
+
+                    <a style="margin-right: 12px" [nzTooltipTitle]="localUser?.Role == 'reader'? 'View' : 'Edit'"
+                        nzTooltipPlacement="topCenter" nz-tooltip routerLinkActive="router-link-active"
+                        [routerLink]="[allReportsData?.isDraftArray[i].isDraft ? 'draft':'update', data._id ?? data.id]"><img
+                            style="height: 20px" src="assets/images/Icon_Edit.svg" /></a>
+
+
+                    <ng-container>
+                        <a style="margin-right: 12px" nzTooltipTitle="Download" nzTooltipPlacement="topCenter"
+                            nz-tooltip>
+                            <img style="height: 20px;" src="assets/images/Icon_PDF Download.svg"
+                                (click)="downloadPDF(data)" />
+                        </a>
+                    </ng-container>
+                </td>
+
+                <td class="tableStatusColumn xsNoDisplay">
+                    <span [ngClass]="{ 'noSync':  data?.syncType && !allReportsData?.isDraftArray[i].isDraft, 'inactive': allReportsData?.isDraftArray[i].isDraft, 'active': !data?.syncType && !allReportsData?.isDraftArray[i].isDraft }" class="status" 
+                    [nzTooltipTitle]="(data?.syncType && !allReportsData?.isDraftArray[i].isDraft) ? 'Sync in progress' : 
+                    allReportsData?.isDraftArray[i].isDraft ? 'Report not submitted' : 
+                    !allReportsData?.isDraftArray[i].isDraft && !data?.syncType ? 'Report submitted' : 
+                    'Report submitted'" nzTooltipPlacement="topCenter" nz-tooltip>
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </nz-table>
+</nz-card>

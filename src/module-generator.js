@@ -162,7 +162,11 @@ async function createDirectoryContents(templatePath, moduleName, moduleWritePath
         const filesToCreate = fs.readdirSync(templatePath);
 
         const { InspectionData, ...restSchema } = schema;
-        console.log('__dirname = ', __dirname);
+        
+        const arg = moduleWritePath.split('/');
+        const noNeed = arg.pop();
+        const routeUrl = arg.join('/');
+        console.log('__dirname = ', __dirname, moduleName, moduleWritePath, routeUrl);
 
         const htmlFile = fs.readFileSync(`${__dirname}/../resource/modules/handlebars/html.handlebars`, 'utf8');
 
@@ -177,63 +181,99 @@ async function createDirectoryContents(templatePath, moduleName, moduleWritePath
                 const PascalCase = `${caseChanger.pascal(moduleName)}Component`;
                 const camelCase = caseChanger.camel(moduleName);
                 const kebabCase = caseChanger.kebab(moduleName);
+                const sentenceCase = caseChanger.sentence(moduleName);
 
-                switch (file) {
-                    case 'sample.component.html':
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.component.html`;
-                        if(htmlContent) {
-                            // console.log('htmlContent = ', htmlContent);
-                            const template = Handlebars.compile( htmlFile );
-                            contents = template({ html: htmlContent });
-                            
-                            // console.log('contents = ', contents);
-                            contents = contents.replace(/HTML_MODULE/g, contents);
-                            contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
-                        }
-                        contents = contents.replace(/MODULE_NAME/g, `${moduleName} works!`);
-                        break;
-                    case 'sample.component.scss':
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.component.scss`;
-                        break;
-                    case 'sample.component.spec.ts':
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.component.spec.ts`;
-                        contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
-                        contents = contents.replace(/MODULE_NAME/g, `'./${moduleName}.component'`);
-                        break;
-                    case 'sample.component.ts':
-                        // eslint-disable-next-line no-param-reassign
-                        file = `${kebabCase}.component.ts`;
-                        const template = Handlebars.compile( contents );
-                        contents = template({ data: schema });
-                        contents = contents.replace(/APP_MODULE/g, `'app-${moduleName}'`);
-                        contents = contents.replace(/MODULE_HTML_COMPONENT/g, `'./${moduleName}.component.html'`);
-                        contents = contents.replace(/MODULE_SCSS/g, `['./${moduleName}.component.scss']`);
-                        contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
-                        const soft = softMandatory(schema);
-                        contents = contents.replace(/MODULE_SOFT_MANDATORY/g, JSON.stringify(soft));
-                        try {
-
-                            const object = await createOptionsObj(htmlContent, worksheet);
-                            contents = contents.replace(/MODULE_OPTIONS_OBJ/g, JSON.stringify(object).replace(/:\[/g, ':[\n\t\t\t\t').replace(/},/g, '},\n\t\t\t\t').replace(/\],/g, '],\n\t\t\t').replace(/]}/g, ']\n\t\t\t}')).replace(/ = {/g, '= {\n\t\t\t').replace(/],/g, '\n\t\t\t],');
-
-                            if(InspectionData && InspectionData.length > 0) {
-                                contents = contents.replace(/SUB_MODULE_SCHEMA/g, JSON.stringify(InspectionData[ 0 ]).replace(/,/g, ',\n          ').replace(/:\[null\]/g, ': [ null ]').replace(/"/g, ''));
+                if(!(moduleName.startsWith('add-update'))) {
+                    switch (file) {
+                        case 'sample2.component.html':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.html`;
+                            contents = contents.replace(/MODULE_NAME/g, `${sentenceCase} Reports`);
+                            break;
+                        case 'sample2.component.scss':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.scss`;
+                            break;
+                        case 'sample.component.spec.ts':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.spec.ts`;
+                            contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
+                            contents = contents.replace(/MODULE_NAME/g, `'./${moduleName}.component'`);
+                            break;
+                        case 'sample2.component.ts':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.ts`;
+                            contents = contents.replace(/APP_MODULE/g, `'app-${moduleName}'`);
+                            contents = contents.replace(/MODULE_HTML_COMPONENT/g, `'./${moduleName}.component.html'`);
+                            contents = contents.replace(/MODULE_SCSS/g, `['./${moduleName}.component.scss']`);
+                            contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
+                            break;
+                        default:
+                            // eslint-disable-next-line no-param-reassign
+                            file = null;
+                    }
+                } else {
+                    switch (file) {
+                        case 'sample.component.html':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.html`;
+                            if(htmlContent) {
+                                // console.log('htmlContent = ', htmlContent);
+                                const template = Handlebars.compile( htmlFile );
+                                contents = template({ html: htmlContent });
+                                
+                                // console.log('contents = ', contents);
+                                contents = contents.replace(/HTML_MODULE/g, contents);
+                                contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
                             }
-                            contents = contents.replace(/MODULE_SCHEMA/g, modelSchema(restSchema));
-                        } catch (error) {
-                            console.log('error = ', error);
-                        }
-                        contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
-                        break;
-                    default:
-                        break;
+                            contents = contents.replace(/MODULE_NAME/g, `${moduleName} works!`);
+                            break;
+                        case 'sample.component.scss':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.scss`;
+                            break;
+                        case 'sample.component.spec.ts':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.spec.ts`;
+                            contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
+                            contents = contents.replace(/MODULE_NAME/g, `'./${moduleName}.component'`);
+                            break;
+                        case 'sample.component.ts':
+                            // eslint-disable-next-line no-param-reassign
+                            file = `${kebabCase}.component.ts`;
+                            const template = Handlebars.compile( contents );
+                            contents = template({ data: schema });
+                            contents = contents.replace(/APP_MODULE/g, `'app-${moduleName}'`);
+                            contents = contents.replace(/MODULE_HTML_COMPONENT/g, `'./${moduleName}.component.html'`);
+                            contents = contents.replace(/MODULE_SCSS/g, `['./${moduleName}.component.scss']`);
+                            contents = contents.replace(/MODULE_COMPONENT_FORM/g, `${camelCase}Form`);
+                            const soft = softMandatory(schema);
+                            contents = contents.replace(/MODULE_SOFT_MANDATORY/g, JSON.stringify(soft));
+                            try {
+    
+                                const object = await createOptionsObj(htmlContent, worksheet);
+                                contents = contents.replace(/MODULE_OPTIONS_OBJ/g, JSON.stringify(object).replace(/:\[/g, ':[\n\t\t\t\t').replace(/},/g, '},\n\t\t\t\t').replace(/\],/g, '],\n\t\t\t').replace(/]}/g, ']\n\t\t\t}')).replace(/ = {/g, '= {\n\t\t\t').replace(/],/g, '\n\t\t\t],');
+    
+                                if(InspectionData && InspectionData.length > 0) {
+                                    contents = contents.replace(/SUB_MODULE_SCHEMA/g, JSON.stringify(InspectionData[ 0 ]).replace(/,/g, ',\n          ').replace(/:\[null\]/g, ': [ null ]').replace(/"/g, ''));
+                                }
+                                contents = contents.replace(/MODULE_SCHEMA/g, modelSchema(restSchema));
+                            } catch (error) {
+                                console.log('error = ', error);
+                            }
+                            contents = contents.replace(/MODULE_COMPONENT/g, PascalCase);
+                            break;
+                        default:
+                            // eslint-disable-next-line no-param-reassign
+                            file = null;
+                    }
                 }
-                const writePath = `${moduleWritePath}/${file}`;
-                fs.writeFileSync(writePath, contents, 'utf8');
-                console.log(chalk.greenBright(writePath));
+
+                if( file ) {
+                    const writePath = `${moduleWritePath}/${file}`;
+                    fs.writeFileSync(writePath, contents, 'utf8');
+                    console.log(chalk.greenBright(writePath));
+                }
             }
 
         });

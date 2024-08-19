@@ -1,0 +1,81 @@
+::ng-deep {
+    .ant-table table {
+      background-color: #f2f1f1 !important;
+    }
+    th {
+      margin: 0px -1px 1px 0px;
+      padding: 10px 0 10px 10px !important;
+      background: #e2e2e2 !important;
+      height: 35px;
+      -webkit-box-shadow: none;
+      -moz-box-shadow: none;
+      box-shadow: none !important;
+      text-align: left;
+      text-transform: uppercase;
+      border-radius: 0px;
+    }
+    td {
+      padding: 10px 0 10px 10px !important;
+    }
+    .ant-table-thead > tr > th {
+      box-shadow: none !important;
+    }
+    .ant-table-thead > tr > th,
+    .ant-table-tbody > tr > td,
+    .ant-table tfoot > tr > th,
+    .ant-table tfoot > tr > td {
+      border-bottom: 1px solid #d9d9d9;
+    }
+  
+    nz-table,
+    nz-table-title-footer,
+    nz-table-inner-scroll,
+    nz-table-inner-default,
+    nz-table-selection {
+      background: #f1f1f1;
+    }
+    .ant-table-tbody > tr > td {
+      padding: 5px 0;
+    }
+  }
+  
+  .ant-card {
+    border-radius: 5px;
+    background: #f1f1f1;
+  }
+  
+  .dateWidth {
+    width: 8%;
+  }
+  
+  .inspWidth {
+    width: 18%;
+  }
+  
+  .portWidth {
+    width: 38%;
+  }
+  
+  @media (max-width: 830px) {
+    .dateWidth {
+      width: 12%;
+    }
+  
+    .inspWidth {
+      width: 22%;
+    }
+  
+    .portWidth {
+      width: 30%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .dateWidth {
+      width: 26%;
+    }
+  
+    .portWidth {
+      width: 42%;
+    }
+  }

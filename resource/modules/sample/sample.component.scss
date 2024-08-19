@@ -15,3 +15,50 @@
       padding: 0 !important;
     }
   }
+
+  .border-color-white {
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 5px;
+  }
+  
+  .border-color-green {
+    border: 1px solid #2bb673 !important;
+    border-radius: 5px;
+  }
+  
+  .border-color-red {
+    border: 1px solid #ff4d4f !important;
+    border-radius: 5px;
+  }
+
+  .ng-invalid.ng-touched {
+    border-color: red !important;
+  }
+
+  :host ::ng-deep .ant-tabs-tab {
+    background: #e1e1e1 !important;
+    border-radius: 5px !important;
+    border: 1px solid #d9d9d9 !important;
+    margin: 0 5px !important;
+  }
+  
+  :host ::ng-deep .ant-tabs-tab:hover {
+    color: black;
+  }
+
+  :host ::ng-deep {
+    .ant-tabs-tab-active {
+      background: #2bb673 !important;
+    }
+    .ant-tabs-tab-active:hover {
+      background: #1d7d4f !important;
+    }
+  
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+      color: #ffffff !important;
+    }
+  
+    .ant-tabs-tab-btn:hover {
+      color: black;
+    }
+  }
